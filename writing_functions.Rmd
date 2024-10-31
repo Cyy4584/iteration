@@ -1,0 +1,143 @@
+---
+title: "writing_functions"
+author: "Yingyu Cui"
+date: "2024-10-30"
+output: github_document
+---
+
+function:
+consists of argument, body and return objects
+conditional execution
+
+```{r set up}
+library(tidyverse)
+library(rvest)
+set.seed(1)
+```
+
+# First try something simple
+```{r simple_function}
+x_vec = rnorm(25, mean = 5, sd = 3)
+
+(x_vec - mean(x_vec)) / sd(x_vec)
+# this is how we compute z-scores
+```
+
+# Here is a function
+```{r z_score_function} 
+z_scores = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop("Argument x should be numeric")
+  } else if (length(x) == 1) {
+    stop("Z scores cannot be computed for length 1 vectors")
+  }
+  # else if means check the next condition if the previous one is not been stopped. If the first one is stopped, then the second one will not be checked, which is more efficient.
+  z = (x - mean(x)) / sd(x)
+  
+  z
+}
+
+z_scores(x_vec)
+```
+# make some other try
+```{r try other kinds of arguments in this function}
+z_scores(3)
+# which is because there is no sd(3)
+z_scores("my name is jeff")
+
+z_scores(df_iris)
+# this is not gonna work in a dataframe 
+z_scores(sample(c(TRUE, FALSE), 25, replace = TRUE))
+# we have some answer but we do not hope this works because we only want the arguments to be numeric. Logical factors will be recognized as 0 or 1.
+```
+
+# multiple outputs
+```{r multiple_outputs}
+mean_and_sd = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop("Argument x should be numeric")
+  } else if (length(x) == 1) {
+    stop("Cannot be computed for length 1 vectors")
+  }
+  
+  mean_x = mean(x)
+  sd_x = sd(x)
+
+  list(mean = mean_x, 
+       sd = sd_x)
+}
+```
+
+or make outputs as a data frame
+
+```{r multiple_outputs_2}
+mean_and_sd = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop("Argument x should be numeric")
+  } else if (length(x) == 1) {
+    stop("Cannot be computed for length 1 vectors")
+  }
+  
+  mean_x = mean(x)
+  sd_x = sd(x)
+
+  tibble(
+    mean = mean_x, 
+    sd = sd_x
+  )
+}
+```
+
+# multiple inputs
+```{r multiple_inputs}
+# if we want to input more than one
+sim_data = tibble(
+  x = rnorm(30, mean = 2, sd = 3)
+)
+
+sim_data |> 
+  summarize(
+    mu_hat = mean(x),
+    sigma_hat = sd(x)
+  )
+# this is a simple way to compute mean and sd, but every time we want to change the data, we have to change the code.
+
+# we can write a function to do this
+sim_mean_sd = function(n, mu = 2, sigma = 3) {
+  
+  sim_data = tibble(
+    x = rnorm(n, mean = mu, sd = sigma),
+  )
+  
+  sim_data |> 
+    summarize(
+      mu_hat = mean(x),
+      sigma_hat = sd(x)
+    )
+}
+# sim_data(100) is fine because we set some default values for mu and sigma
+# sim_data(100, 4, 5) is also fine because we can change the values of mu and sigma, this will overlap the values we set in the function.
+# normally we use the positinal matching, but we can also use named matching.
+
+```
+
+# multiple data manipulation
+examples from the P8105 and in recording
+
+make sure the fuction(x) x is in your environment, and not mix with something else.
+
+# function as an argument
+```{r function_as_argument}
+x_vec = rnorm(25, 0, 1)
+
+my_summary = function(x, summ_func) {
+  summ_func(x)
+}
+
+my_summary(x_vec, sd)
+# like reorder function in dplyr, we can also use our own function as an argument.
+```
+
